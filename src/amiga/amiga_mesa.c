@@ -147,6 +147,7 @@ AMesaContext* amesa_create_context(struct Window *window) {
 	AMesaContext *a_ctx = NULL;
 	struct Screen* screen;
 	ULONG pixelFormat;
+	GLboolean validMode = GL_FALSE;
 
 	_mesa_debug(NULL, "Creating Amiga context...\n");
 
@@ -170,8 +171,16 @@ AMesaContext* amesa_create_context(struct Window *window) {
 	}
 
 	pixelFormat = GetCyberMapAttr(a_ctx->hardware_window->RPort->BitMap, CYBRMATTR_PIXFMT);
-	if ((pixelFormat != PIXFMT_ARGB32) && (pixelFormat != PIXFMT_BGRA32) && (pixelFormat != PIXFMT_RGBA32)) {
-		_mesa_error(NULL, GL_INVALID_VALUE, "Only 32-bit pixel formats are supported by OpenGL");
+	if ((pixelFormat == PIXFMT_ARGB32) || (pixelFormat == PIXFMT_BGRA32) || (pixelFormat != PIXFMT_RGBA32)) {
+		validMode = GL_TRUE;
+	}
+
+	if ((pixelFormat == PIXFMT_BGR24) || (pixelFormat == PIXFMT_RGB24)) {
+		validMode = GL_TRUE;
+	}
+
+	if (!validMode) {
+		_mesa_error(NULL, GL_INVALID_VALUE, "Only 24/32-bit pixel formats are supported by OpenGL");
 		return NULL;
 	}
 

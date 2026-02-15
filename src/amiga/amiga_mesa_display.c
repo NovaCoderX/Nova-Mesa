@@ -201,7 +201,6 @@ static void write_rgb_span(const GLcontext *gl_ctx, GLuint n, GLint x, GLint y,
             }
         }
     } else {
-        // FAST PATH: No mask, direct 32-bit writes
         for (GLuint i = 0; i < n; i++) {
             buffer[i] = TC_ARGB32(rgba[i][RCOMP], rgba[i][GCOMP], rgba[i][BCOMP], 255);
         }
@@ -219,6 +218,7 @@ static void write_rgba_span(const GLcontext *gl_ctx, GLuint n, GLint x, GLint y,
 	if (mask) {
 		for (GLuint i = 0; i < n; i++) {
 			if (mask[i]) {
+                // Convert 4-component RGB to 32-bit ARGB
 				buffer[i] = TC_ARGB32(rgba[i][RCOMP], rgba[i][GCOMP], rgba[i][BCOMP], rgba[i][ACOMP]);
 			}
 		}
@@ -247,7 +247,6 @@ static void write_mono_rgba_span(const GLcontext *gl_ctx, GLuint n, GLint x, GLi
 			}
 		}
 	} else {
-		// Fast path for unmasked mono spans
 		for (GLuint i = 0; i < n; i++) {
 			buffer[i] = hicolor;
 		}
@@ -262,11 +261,17 @@ static void write_rgba_pixels(const GLcontext *gl_ctx, GLuint n, const GLint x[]
     int h = a_ctx->height - 1;
     int w = a_ctx->width;
 
-    for (GLuint i = 0; i < n; i++) {
-        if (mask[i]) {
-            // Straightforward 32-bit array indexing
-            buffer[(h - y[i]) * w + x[i]] = TC_ARGB32(rgba[i][0], rgba[i][1], rgba[i][2], rgba[i][3]);
-        }
+    if (mask) {
+		for (GLuint i = 0; i < n; i++) {
+			if (mask[i]) {
+				// Straightforward 32-bit array indexing
+				buffer[(h - y[i]) * w + x[i]] = TC_ARGB32(rgba[i][0], rgba[i][1], rgba[i][2], rgba[i][3]);
+			}
+		}
+    } else {
+		for (GLuint i = 0; i < n; i++) {
+			buffer[(h - y[i]) * w + x[i]] = TC_ARGB32(rgba[i][0], rgba[i][1], rgba[i][2], rgba[i][3]);
+		}
     }
 }
 
@@ -289,9 +294,15 @@ static void write_mono_rgba_pixels(const GLcontext *gl_ctx, GLuint n, const GLin
 	// In the non-padded approach, stride is just the width
 	int stride = a_ctx->width;
 
-	for (GLuint i = 0; i < n; i++) {
-		if (mask[i]) {
-			// Accessing 32-bit pixels using the simplified width stride [cite: 19, 24, 39]
+	if (mask) {
+		for (GLuint i = 0; i < n; i++) {
+			if (mask[i]) {
+				// Accessing 32-bit pixels using the simplified width stride [cite: 19, 24, 39]
+				buffer[(h - y[i]) * stride + x[i]] = hicolor;
+			}
+		}
+	} else {
+		for (GLuint i = 0; i < n; i++) {
 			buffer[(h - y[i]) * stride + x[i]] = hicolor;
 		}
 	}
@@ -327,17 +338,30 @@ static void read_rgba_pixels(const GLcontext *gl_ctx, GLuint n, const GLint x[],
     // In the non-padded approach, stride in pixels is exactly the width
     int stride = a_ctx->width;
 
-    for (GLuint i = 0; i < n; i++) {
-        if (mask[i]) {
-            // Read the 32-bit ARGB pixel
-            GLuint color = buffer[(h - y[i]) * stride + x[i]];
+    if (mask) {
+		for (GLuint i = 0; i < n; i++) {
+			if (mask[i]) {
+				// Read the 32-bit ARGB pixel
+				GLuint color = buffer[(h - y[i]) * stride + x[i]];
 
-            // Unpack ARGB8888 components (Byte 0: Alpha, 1: Red, 2: Green, 3: Blue)
-            rgba[i][RCOMP] = (GLubyte)((color >> 16) & 0xff); // Red
-            rgba[i][GCOMP] = (GLubyte)((color >> 8)  & 0xff); // Green
-            rgba[i][BCOMP] = (GLubyte)(color & 0xff); // Blue
-            rgba[i][ACOMP] = (GLubyte)((color >> 24) & 0xff); // Alpha
-        }
+				// Unpack ARGB8888 components (Byte 0: Alpha, 1: Red, 2: Green, 3: Blue)
+				rgba[i][RCOMP] = (GLubyte)((color >> 16) & 0xff); // Red
+				rgba[i][GCOMP] = (GLubyte)((color >> 8)  & 0xff); // Green
+				rgba[i][BCOMP] = (GLubyte)(color & 0xff); // Blue
+				rgba[i][ACOMP] = (GLubyte)((color >> 24) & 0xff); // Alpha
+			}
+		}
+    } else {
+		for (GLuint i = 0; i < n; i++) {
+			// Read the 32-bit ARGB pixel
+			GLuint color = buffer[(h - y[i]) * stride + x[i]];
+
+			// Unpack ARGB8888 components (Byte 0: Alpha, 1: Red, 2: Green, 3: Blue)
+			rgba[i][RCOMP] = (GLubyte)((color >> 16) & 0xff); // Red
+			rgba[i][GCOMP] = (GLubyte)((color >> 8)  & 0xff); // Green
+			rgba[i][BCOMP] = (GLubyte)(color & 0xff); // Blue
+			rgba[i][ACOMP] = (GLubyte)((color >> 24) & 0xff); // Alpha
+		}
     }
 }
 

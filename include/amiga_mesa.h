@@ -35,31 +35,30 @@ extern "C" {
  */
 typedef struct amigamesa_context AMesaContext;
 
-
 /*
  * Create the rendering context.
  */
-extern AMesaContext* amesa_create_context(struct Window *window);
+extern AMesaContext* amesa_create_context(struct Window* window);
 
 /*
  * Destroy a rendering context.
  */
-extern void amesa_destroy_context(AMesaContext *a_ctx);
+extern void amesa_destroy_context(AMesaContext* a_ctx);
 
 /*
  * Make the specified context the current one.
  */
-extern void amesa_make_current(AMesaContext *a_ctx);
+extern void amesa_make_current(AMesaContext* a_ctx);
 
 /*
- * Swap the front and back buffers for the current context.  No action
- * taken if the context is not double buffered.
+ * Update the rendering context with new window dimensions.
  */
-extern void amesa_swap_buffers(AMesaContext *a_ctx);
+extern GLboolean amesa_update_context(AMesaContext* a_ctx, struct Window* new_window);
 
-
-
-
+/*
+ * Swap the front and back buffers for the current context.
+ */
+extern void amesa_swap_buffers(AMesaContext* a_ctx);
 
 
 #ifdef __cplusplus

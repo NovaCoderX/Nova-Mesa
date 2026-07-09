@@ -47,12 +47,10 @@
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 
-
 #include <proto/cybergraphics.h>
 #include <cybergraphics/cybergraphics.h>
 
-
-static GLvisual* amesa_create_visual(AMesaContext *a_ctx) {
+static GLvisual* amesa_create_visual(AMesaContext* a_ctx) {
 	GLint indexBits;
 	GLint redBits, greenBits, blueBits, alphaBits;
 	GLint depthBits, stencilBits;
@@ -77,81 +75,15 @@ static GLvisual* amesa_create_visual(AMesaContext *a_ctx) {
 			accumRedBits, accumGreenBits, accumBlueBits, accumAlphaBits, 1);
 }
 
-void amesa_destroy_context(AMesaContext *a_ctx) {
-	if (a_ctx) {
-		amesa_display_shutdown(a_ctx);
-
-		if (a_ctx->gl_ctx) {
-			_swsetup_DestroyContext(a_ctx->gl_ctx);
-			_tnl_DestroyContext(a_ctx->gl_ctx);
-			_ac_DestroyContext(a_ctx->gl_ctx);
-			_swrast_DestroyContext(a_ctx->gl_ctx);
-
-			_mesa_destroy_framebuffer(a_ctx->gl_buffer);
-			_mesa_destroy_context(a_ctx->gl_ctx);
-			_mesa_destroy_visual(a_ctx->gl_visual);
-		}
-
-		FreeVec(a_ctx);
-		a_ctx = NULL;
-	}
-
-	_mesa_log_quit();
-}
-
-void amesa_make_current(AMesaContext *a_ctx)
-{
-	if (a_ctx) {
-		GLcontext *ctx = a_ctx->gl_ctx;
-
-		/*
-		 * Make Mesa aware of the current framebuffer
-		 */
-		_mesa_make_current(ctx, a_ctx->gl_buffer);
-
-		/*
-		 * Set framebuffer dimensions explicitly (Mesa 4.1)
-		 */
-		ctx->DrawBuffer->Width = a_ctx->width;
-		ctx->DrawBuffer->Height = a_ctx->height;
-
-		/*
-		 * Initialize viewport and scissor once
-		 */
-		if (ctx->Viewport.Width == 0 || ctx->Viewport.Height == 0) {
-			_mesa_Viewport(0, 0, a_ctx->width, a_ctx->height);
-
-			ctx->Scissor.X = 0;
-			ctx->Scissor.Y = 0;
-			ctx->Scissor.Width  = a_ctx->width;
-			ctx->Scissor.Height = a_ctx->height;
-		}
-
-		/*
-		 * Notify software rasterizer that buffer-related state is valid
-		 */
-		_swrast_InvalidateState(ctx, _NEW_BUFFERS);
-		_swsetup_InvalidateState(ctx, _NEW_BUFFERS);
-		_ac_InvalidateState(ctx, _NEW_BUFFERS);
-		_tnl_InvalidateState(ctx, _NEW_BUFFERS);
-	}
-}
-
-void amesa_swap_buffers(AMesaContext *ctx) {
-	if (ctx) {
-		amesa_display_swap_buffer(ctx);
-	}
-}
-
-AMesaContext* amesa_create_context(struct Window *window) {
-	AMesaContext *a_ctx = NULL;
+AMesaContext* amesa_create_context(struct Window* window) {
+	AMesaContext* a_ctx = NULL;
 	struct Screen* screen;
 	ULONG pixelFormat;
 	GLboolean validMode = GL_FALSE;
 
 	_mesa_debug(NULL, "Creating Amiga context...\n");
 
-	a_ctx = (AMesaContext*)AllocVec(sizeof(AMesaContext), MEMF_PUBLIC|MEMF_CLEAR);
+	a_ctx = (AMesaContext*) AllocVec(sizeof(AMesaContext), MEMF_PUBLIC|MEMF_CLEAR);
 	if (!a_ctx) {
 		_mesa_error(NULL, GL_OUT_OF_MEMORY, "Could not allocate an Amiga context");
 		return NULL;
@@ -184,10 +116,8 @@ AMesaContext* amesa_create_context(struct Window *window) {
 		return NULL;
 	}
 
-	a_ctx->width = a_ctx->hardware_window->Width -
-	                (a_ctx->hardware_window->BorderLeft + a_ctx->hardware_window->BorderRight);
-	a_ctx->height = a_ctx->hardware_window->Height -
-	                (a_ctx->hardware_window->BorderTop + a_ctx->hardware_window->BorderBottom);
+	a_ctx->width = a_ctx->hardware_window->Width - (a_ctx->hardware_window->BorderLeft + a_ctx->hardware_window->BorderRight);
+	a_ctx->height = a_ctx->hardware_window->Height - (a_ctx->hardware_window->BorderTop + a_ctx->hardware_window->BorderBottom);
 	a_ctx->pitch = (a_ctx->width * 4);
 
 	_mesa_debug(NULL, "Creating Mesa Visual...\n");
@@ -198,7 +128,7 @@ AMesaContext* amesa_create_context(struct Window *window) {
 	}
 
 	// Allocate a new Mesa context
-	a_ctx->gl_ctx = (void*)_mesa_create_context(a_ctx->gl_visual, NULL, (void*) a_ctx, GL_FALSE);
+	a_ctx->gl_ctx = (void*) _mesa_create_context(a_ctx->gl_visual, NULL, (void*) a_ctx, GL_FALSE);
 	if (!a_ctx->gl_ctx) {
 		_mesa_error(NULL, GL_INVALID_VALUE, "Could not create the GL Context");
 		return NULL;
@@ -207,8 +137,7 @@ AMesaContext* amesa_create_context(struct Window *window) {
 	_mesa_enable_sw_extensions(a_ctx->gl_ctx);
 	_mesa_enable_1_3_extensions(a_ctx->gl_ctx);
 
-	// OpenGL 1.4 not enabled.
-	// Mesa 4.1 software paths incomplete for custom back buffers.
+	// OpenGL 1.4 not enabled because software paths are incomplete for custom back buffers.
 	//_mesa_enable_1_4_extensions(a_ctx->gl_ctx);
 
 	_mesa_debug(NULL, "Creating Mesa buffer...\n");
@@ -234,3 +163,107 @@ AMesaContext* amesa_create_context(struct Window *window) {
 
 	return a_ctx;
 }
+
+void amesa_destroy_context(AMesaContext* a_ctx) {
+	if (a_ctx) {
+		amesa_display_shutdown(a_ctx);
+
+		if (a_ctx->gl_ctx) {
+			_swsetup_DestroyContext(a_ctx->gl_ctx);
+			_tnl_DestroyContext(a_ctx->gl_ctx);
+			_ac_DestroyContext(a_ctx->gl_ctx);
+			_swrast_DestroyContext(a_ctx->gl_ctx);
+
+			_mesa_destroy_framebuffer(a_ctx->gl_buffer);
+			_mesa_destroy_context(a_ctx->gl_ctx);
+			_mesa_destroy_visual(a_ctx->gl_visual);
+		}
+
+		FreeVec(a_ctx);
+		a_ctx = NULL;
+	}
+
+	_mesa_log_quit();
+}
+
+void amesa_make_current(AMesaContext* a_ctx) {
+	if (a_ctx) {
+		GLcontext* ctx = a_ctx->gl_ctx;
+
+		/*
+		 * Make Mesa aware of the current framebuffer
+		 */
+		_mesa_make_current(ctx, a_ctx->gl_buffer);
+
+		/*
+		 * Set framebuffer dimensions explicitly (Mesa 4.1)
+		 */
+		ctx->DrawBuffer->Width = a_ctx->width;
+		ctx->DrawBuffer->Height = a_ctx->height;
+
+		/*
+		 * Initialize viewport and scissor once
+		 */
+		if (ctx->Viewport.Width == 0 || ctx->Viewport.Height == 0) {
+			_mesa_Viewport(0, 0, a_ctx->width, a_ctx->height);
+
+			ctx->Scissor.X = 0;
+			ctx->Scissor.Y = 0;
+			ctx->Scissor.Width = a_ctx->width;
+			ctx->Scissor.Height = a_ctx->height;
+		}
+
+		/* Invalidate all Mesa state that depends on buffer geometry */
+		_swrast_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+		_swsetup_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+		_ac_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+		_tnl_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+	} else {
+		/* NULL context — release current context if one is active */
+		GLcontext* current = _mesa_get_current_context();
+		if (current) {
+			_mesa_make_current(NULL, NULL);
+		}
+	}
+}
+
+GLboolean amesa_update_context(AMesaContext* a_ctx, struct Window* new_window) {
+	if (!a_ctx || !new_window) {
+		return GL_FALSE;
+	}
+
+	/* Tear down display-side only — gl_ctx/gl_visual/gl_buffer survive */
+	amesa_display_shutdown(a_ctx);
+
+	/* Update window reference and dimensions from new window */
+	a_ctx->hardware_window = new_window;
+	a_ctx->width = new_window->Width - (new_window->BorderLeft + new_window->BorderRight);
+	a_ctx->height = new_window->Height - (new_window->BorderTop + new_window->BorderBottom);
+	a_ctx->pitch = a_ctx->width * 4;
+
+	/* Reinitialise display path (reallocates back buffer for new dimensions) */
+	if (!amesa_display_init(a_ctx)) {
+		return GL_FALSE;
+	}
+
+	/* Tell Mesa the framebuffer dimensions changed */
+	GLcontext* ctx = (GLcontext*) a_ctx->gl_ctx;
+	ctx->DrawBuffer->Width = a_ctx->width;
+	ctx->DrawBuffer->Height = a_ctx->height;
+
+	/* Invalidate all Mesa state that depends on buffer geometry */
+	_swrast_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+	_swsetup_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+	_ac_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+	_tnl_InvalidateState(ctx, _NEW_BUFFERS | _NEW_VIEWPORT);
+
+	// All is cool.
+	return GL_TRUE;
+}
+
+void amesa_swap_buffers(AMesaContext* a_ctx) {
+	if (a_ctx) {
+		amesa_display_swap_buffers(a_ctx);
+	}
+}
+

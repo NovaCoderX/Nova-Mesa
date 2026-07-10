@@ -25,6 +25,8 @@
 #include <GL/amiga_mesa.h>
 #include "amiga_mesa_def.h"
 #include "amiga_mesa_display.h"
+#include <proto/cybergraphics.h>
+#include <cybergraphx/cybergraphics.h>
 
 #include "glheader.h"
 #include "context.h"
@@ -47,9 +49,6 @@
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
-
-#include <proto/cybergraphics.h>
-#include <cybergraphics/cybergraphics.h>
 
 #define TC_ARGB32(r, g, b, a) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b))
 

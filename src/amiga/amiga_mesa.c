@@ -70,7 +70,7 @@ static GLvisual* amesa_create_visual(AMesaContext* a_ctx) {
 	accumAlphaBits = ACCUM_BITS;
 
 	// Create core visual
-	return _mesa_create_visual(GL_TRUE, GL_FALSE, GL_FALSE, redBits, greenBits, blueBits, alphaBits, indexBits, depthBits, stencilBits,
+	return _mesa_create_visual(GL_TRUE, GL_TRUE, GL_FALSE, redBits, greenBits, blueBits, alphaBits, indexBits, depthBits, stencilBits,
 			accumRedBits, accumGreenBits, accumBlueBits, accumAlphaBits, 1);
 }
 
@@ -102,7 +102,7 @@ AMesaContext* amesa_create_context(struct Window* window) {
 	}
 
 	pixelFormat = GetCyberMapAttr(a_ctx->hardware_window->RPort->BitMap, CYBRMATTR_PIXFMT);
-	if ((pixelFormat == PIXFMT_ARGB32) || (pixelFormat == PIXFMT_BGRA32) || (pixelFormat != PIXFMT_RGBA32)) {
+	if ((pixelFormat == PIXFMT_ARGB32) || (pixelFormat == PIXFMT_BGRA32) || (pixelFormat == PIXFMT_RGBA32)) {
 		validMode = GL_TRUE;
 	}
 

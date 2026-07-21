@@ -81,8 +81,8 @@ static void get_buffer_size(GLframebuffer* buffer, GLuint* width, GLuint* height
 		*width = a_ctx->width;
 		*height = a_ctx->height;
 	} else {
-		width = 0;
-		height = 0;
+		*width = 0;
+		*height = 0;
 	}
 }
 
@@ -90,7 +90,7 @@ static void set_buffer(GLcontext* gl_ctx, GLframebuffer* buffer, GLuint bufferBi
 #ifdef DEBUG
 	_mesa_debug(NULL, "set_buffer()....\n");
 #endif
-	// Note - Not needed as we don't use a double buffer (as far as OpenGL is concerned).
+	// Note - Not needed as we only use the back buffer for rendering.
 }
 
 static void enable(GLcontext* gl_ctx, GLenum pname, GLboolean enable) {
@@ -149,14 +149,14 @@ static void clear(GLcontext* gl_ctx, GLbitfield mask, GLboolean all, GLint x, GL
 
 	// Only proceed if color masking is off (standard behavior)
 	if (colorMask == 0xffffffff) {
-		if (mask & DD_FRONT_LEFT_BIT) {
+		if (mask & DD_BACK_LEFT_BIT) {	// Was DD_FRONT_LEFT_BIT when single buffered
 			if (all) {
 				// Bulk copy the pre-filled clear_buffer into the back_buffer
 				// In 32-bit non-padded mode, pitch is exactly width * 4
 				CopyMemQuick(a_ctx->clear_buffer, a_ctx->back_buffer, (a_ctx->height * a_ctx->pitch));
 			} else {
 				// Use 32-bit pointers for ARGB pixels
-				GLuint* buffer = (GLuint*) a_ctx->back_buffer;
+				GLuint* buffer = (GLuint*)a_ctx->back_buffer;
 
 				// NEW APPROACH: Stride in pixels is just the width
 				const GLint stride = a_ctx->width;
@@ -177,7 +177,7 @@ static void clear(GLcontext* gl_ctx, GLbitfield mask, GLboolean all, GLint x, GL
 				}
 			}
 
-			mask &= ~DD_FRONT_LEFT_BIT;
+			mask &= ~DD_BACK_LEFT_BIT;  //  ~DD_FRONT_LEFT_BIT;
 		}
 	}
 

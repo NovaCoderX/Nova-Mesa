@@ -149,7 +149,7 @@ static void clear(GLcontext* gl_ctx, GLbitfield mask, GLboolean all, GLint x, GL
 
 	// Only proceed if color masking is off (standard behavior)
 	if (colorMask == 0xffffffff) {
-		if (mask & DD_BACK_LEFT_BIT) {	// Was DD_FRONT_LEFT_BIT when single buffered
+		if (mask & DD_BACK_LEFT_BIT) {
 			if (all) {
 				// Bulk copy the pre-filled clear_buffer into the back_buffer
 				// In 32-bit non-padded mode, pitch is exactly width * 4
@@ -177,7 +177,7 @@ static void clear(GLcontext* gl_ctx, GLbitfield mask, GLboolean all, GLint x, GL
 				}
 			}
 
-			mask &= ~DD_BACK_LEFT_BIT;  //  ~DD_FRONT_LEFT_BIT;
+			mask &= ~DD_BACK_LEFT_BIT;
 		}
 	}
 
